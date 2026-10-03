@@ -1,4 +1,5 @@
-# AUTÓMATA 2D VJ PRO · Morfismo Generativo, Web MIDI & Live Visuals
+# KREA VISION LAB multimedia arts · Morfismo Generativo, Web MIDI & Live Visuals
+https://krea27.github.io/krea-vision-lab-multimedia-arts/
 
 Consola visual interactiva para VJing y arte generativo en tiempo real basada en **autómatas celulares continuos (ecuaciones de difusión)**, desplazamiento vectorial orgánico, control físico por hardware vía **Web MIDI** y procesamiento multimodal en vivo (Galería de Fotos, Cámara Web en Vivo y Video Loops).
 
