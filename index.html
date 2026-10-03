@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KREA VISION LAB · Studio Multiview Pro</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/p5.sound.min.js"></script>
+  </head>
+  <body class="studio-layout">
+    <!-- Overlay de Drag & Drop -->
+    <div id="drop-overlay" class="drop-overlay">
+      <div class="drop-content">
+        <div class="drop-icon">+</div>
+        <h2>Suelta tus archivos aquí</h2>
+        <p>Soporta imágenes (JPG, PNG, WebP), videos y audio</p>
+      </div>
+    </div>
+
+    <!-- ZONA SUPERIOR: BARRA DE ESTUDIO Y MULTIVIEW (4 Pantallas en miniatura para monitoreo en vivo) -->
+    <header class="studio-topbar">
+      <div class="studio-brand">
+        <span class="pulse-indicator"></span>
+        <span class="brand-title">KREA VISION LAB</span>
+        <span class="version-tag">STUDIO MULTIVIEW</span>
+      </div>
+
+      <div class="studio-badges">
+        <div class="header-badge" id="image-badge">Fotos: 3</div>
+        <div class="header-badge" id="audio-badge">Audio: <span id="audio-track-label">Dark Drone</span></div>
+        <div class="midi-badge" id="midi-badge">MIDI: Desconectado</div>
+      </div>
+
+      <div class="studio-top-actions">
+        <button id="btn-solo-view" class="btn-top-tech" title="Alternar entre 4 Pantallas y Monitor Expandido (Tecla V)">Expandir (V)</button>
+        <button id="btn-toggle-ui" class="btn-top-tech" title="Ocultar / Mostrar consola de controles (Tecla H)">Panel (H)</button>
+        <button id="btn-fullscreen-top" class="btn-top-tech" title="Pantalla Completa (Tecla F)">Full (F)</button>
+      </div>
+    </header>
+
+    <!-- Contenedor del Canvas Multiview con las 4 pantallas y sus tarjetas de monitoreo -->
+    <main id="multiview-area" class="multiview-area">
+      <!-- El canvas de p5.js se ubica en este contenedor ocupando la mitad superior -->
+      <div id="monitors-canvas-container" class="monitors-canvas-container"></div>
+
+      <!-- Tarjetas interactivas sobrepuestas sobre cada miniatura -->
+      <div class="monitors-overlay-grid">
+        <div class="monitor-card" data-channel="1" id="card-p1" title="Clic para controlar Pantalla 1">
+          <div class="card-head">
+            <span class="card-tag p1">P1</span>
+            <span class="card-title" id="title-p1">FOTOS BOTÁNICAS</span>
+            <button class="btn-screen-launch" data-screen="1" title="Abrir Pantalla 1 limpia en ventana independiente">↗</button>
+          </div>
+          <div class="card-live-tag">EN VIVO</div>
+          <div class="card-foot">
+            <span class="card-meta" id="meta-p1">RGB · Neutro</span>
+          </div>
+        </div>
+
+        <div class="monitor-card" data-channel="2" id="card-p2" title="Clic para controlar Pantalla 2">
+          <div class="card-head">
+            <span class="card-tag p2">P2</span>
+            <span class="card-title" id="title-p2">CÁMARA WEB</span>
+            <button class="btn-screen-launch" data-screen="2" title="Abrir Pantalla 2 limpia en ventana independiente">↗</button>
+          </div>
+          <div class="card-live-tag">EN VIVO</div>
+          <div class="card-foot">
+            <span class="card-meta" id="meta-p2">Calor · 180° Cian</span>
+          </div>
+        </div>
+
+        <div class="monitor-card" data-channel="3" id="card-p3" title="Clic para controlar Pantalla 3">
+          <div class="card-head">
+            <span class="card-tag p3">P3</span>
+            <span class="card-title" id="title-p3">VIDEO LOOP</span>
+            <button class="btn-screen-launch" data-screen="3" title="Abrir Pantalla 3 limpia en ventana independiente">↗</button>
+          </div>
+          <div class="card-live-tag">EN VIVO</div>
+          <div class="card-foot">
+            <span class="card-meta" id="meta-p3">Fotocopia · 310° Mag</span>
+          </div>
+        </div>
+
+        <div class="monitor-card" data-channel="4" id="card-p4" title="Clic para controlar Pantalla 4">
+          <div class="card-head">
+            <span class="card-tag p4">P4</span>
+            <span class="card-title" id="title-p4">FUSIÓN HÍBRIDA</span>
+            <button class="btn-screen-launch" data-screen="4" title="Abrir Pantalla 4 limpia en ventana independiente">↗</button>
+          </div>
+          <div class="card-live-tag">EN VIVO</div>
+          <div class="card-foot">
+            <span class="card-meta" id="meta-p4">Rayos X · 65° Dorado</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ZONA INFERIOR: CONSOLA DE PROCESAMIENTO (OCUPA CÓMODAMENTE TODO EL ANCHO) -->
+    <footer id="control-deck" class="control-deck">
+      <!-- Barra superior del deck con selector de canales y destino -->
+      <div class="deck-channel-bar">
+        <div class="deck-channel-nav">
+          <span class="deck-label">ENRUTAMIENTO:</span>
+          <button class="channel-btn" data-channel="0" title="Controlar las 4 pantallas simultáneamente">TODAS (Global)</button>
+          <button class="channel-btn active" data-channel="1" title="Controlar Pantalla 1">P1</button>
+          <button class="channel-btn" data-channel="2" title="Controlar Pantalla 2">P2</button>
+          <button class="channel-btn" data-channel="3" title="Controlar Pantalla 3">P3</button>
+          <button class="channel-btn" data-channel="4" title="Controlar Pantalla 4">P4</button>
+        </div>
+
+        <div class="channel-status-bar p1" id="channel-status-bar">Destino: Pantalla 1 (Fotos)</div>
+
+        <div class="deck-quick-launchers">
+          <button id="btn-open-all-screens" class="btn-deck-action" title="Abrir las 4 pantallas limpias independientes en ventanas">Abrir las 4 Salidas ↗</button>
+          <button id="btn-close-ui" class="btn-deck-min" title="Ocultar / Minimizar consola (Tecla H)">✕</button>
+        </div>
+      </div>
+
+      <!-- Barra de Mensajes / Máquina de Escribir para el público -->
+      <div class="typewriter-control-bar">
+        <div class="tw-main-row">
+          <div class="tw-input-wrapper">
+            <span class="tw-icon">⌨ MÁQUINA DE ESCRIBIR:</span>
+            <input type="text" id="typewriter-input" maxlength="75" placeholder="Escribe un mensaje para los espectadores (máx 75 caracteres)..." autocomplete="off" />
+          </div>
+          <div class="tw-actions">
+            <button id="btn-typewriter-send" class="btn-tw-action send" title="Escribir mensaje en pantalla con efecto máquina de escribir (Enter)">Mostrar ↵</button>
+            <button id="btn-typewriter-clear" class="btn-tw-action clear" title="Ocultar y apagar mensaje de la pantalla">Apagar</button>
+            <span id="tw-status" class="tw-status-tag">EN PANTALLA</span>
+          </div>
+        </div>
+        <div class="tw-sub-row">
+          <div class="tw-styles">
+            <span class="tw-sub-label">ESTILO:</span>
+            <button class="tw-style-btn active" data-style="box-black" title="Fondo negro ceñido con texto blanco (sin reborde)">⬛ Fondo Negro</button>
+            <button class="tw-style-btn" data-style="box-white" title="Fondo blanco ceñido con texto negro (sin reborde)">⬜ Fondo Blanco</button>
+            <button class="tw-style-btn" data-style="clean-white" title="Texto blanco limpio sin recuadro flotante">✨ Blanco Limpio</button>
+            <button class="tw-style-btn" data-style="clean-black" title="Texto negro limpio sin recuadro flotante">🌑 Negro Limpio</button>
+          </div>
+          <div class="tw-presets">
+            <span class="tw-sub-label">FRASES:</span>
+            <button class="tw-chip" data-msg="MIRA DE CERCA">"Mira de cerca"</button>
+            <button class="tw-chip" data-msg="TOCA LA PANTALLA">"Toca la pantalla"</button>
+            <button class="tw-chip" data-msg="EL TIEMPO SE DESVANECE">"El tiempo se desvanece"</button>
+            <button class="tw-chip" data-msg="EL ARTE ES EFÍMERO">"El arte es efímero"</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Módulos de Procesamiento en Grilla Horizontal (todo el ancho) -->
+      <div class="deck-modules-row">
+        <!-- MÓDULO 1: FUENTES DE ENTRADA -->
+        <div class="deck-module">
+          <div class="module-title">FUENTE DE ENTRADA</div>
+          <div class="source-nav">
+            <button id="src-images" class="src-btn active" title="Atajo: Tecla 1 o MIDI Do">Fotos</button>
+            <button id="src-camera" class="src-btn" title="Atajo: Tecla 2 o MIDI Re">Cámara</button>
+            <button id="src-video" class="src-btn" title="Atajo: Tecla 3 o MIDI Mi">Video</button>
+          </div>
+          <div class="source-actions">
+            <button id="btn-upload" class="btn-tech" title="Subir fotos">+ Fotos</button>
+            <button id="btn-reset-gallery" class="btn-tech" title="Restablecer fotos botánicas originales">↺ Base</button>
+            <input type="file" id="file-input" multiple accept="image/*" style="display: none;" />
+            <button id="btn-video-upload" class="btn-tech" title="Subir archivo de video">+ Video</button>
+            <input type="file" id="video-file-input" accept="video/mp4,video/webm,video/ogg" style="display: none;" />
+            <button id="btn-next" class="btn-tech" title="Atajo: Espacio">Sig</button>
+          </div>
+        </div>
+
+        <!-- MÓDULO 2: PALETAS & TINTE -->
+        <div class="deck-module">
+          <div class="module-title">PALETA DE COLOR & TINTE</div>
+          <div class="color-palette-grid">
+            <button class="palette-chip active" data-mode="0">RGB</button>
+            <button class="palette-chip" data-mode="1">Calor</button>
+            <button class="palette-chip" data-mode="2">Neón</button>
+            <button class="palette-chip" data-mode="3">Fotocopia</button>
+            <button class="palette-chip" data-mode="4">B&N</button>
+            <button class="palette-chip" data-mode="5">Rayos X</button>
+          </div>
+          <div class="slider-group" style="margin-top: 8px;">
+            <label for="tint-slider">Tinte Cromático: <span id="tint-val">Neutro</span></label>
+            <input type="range" id="tint-slider" class="tint-range" min="0" max="360" step="15" value="0">
+          </div>
+        </div>
+
+        <!-- MÓDULO 3: EFECTOS EN VIVO -->
+        <div class="deck-module">
+          <div class="module-title">EFECTOS EN VIVO</div>
+          <div class="fx-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 4px;">
+            <button id="btn-pause" class="fx-btn" title="Pausar / Reanudar (Atajo: P)">
+              <span class="fx-led blue-led"></span>
+              <span class="fx-text" id="pause-label">Pausa</span>
+            </button>
+            <button id="btn-vintage-film" class="fx-btn" title="Preset Cine 20s (60% Suciedad + Sepia Clásico - Atajo: K)">
+              <span class="fx-led amber-led"></span>
+              <span class="fx-text">Cine 20s</span>
+            </button>
+          </div>
+          <div class="slider-group">
+            <label for="glitch-slider">Glitch: <span id="glitch-val">0%</span></label>
+            <input type="range" id="glitch-slider" min="0" max="100" step="5" value="0" title="Graduar desgarro digital y división cromática RGB (Atajo: G)">
+          </div>
+          <div class="slider-group">
+            <label for="film-dirt-slider">Pelos & Suciedad: <span id="film-dirt-val">0%</span></label>
+            <input type="range" id="film-dirt-slider" min="0" max="100" step="5" value="0" title="Rayones verticales, pelos erráticos, motas de polvo, grano y parpadeo">
+          </div>
+          <div class="slider-group">
+            <label for="film-tone-slider">Tono Película: <span id="film-tone-val">Original</span></label>
+            <input type="range" id="film-tone-slider" min="0" max="100" step="5" value="0" title="De Color Original a Blanco y Negro o Sepia en distintas tonalidades">
+          </div>
+        </div>
+
+        <!-- MÓDULO 4: PARÁMETROS DINÁMICOS -->
+        <div class="deck-module module-sliders">
+          <div class="module-title">PARÁMETROS VISUALES (FADERS)</div>
+          <div class="ui-sliders-grid">
+            <div class="slider-group">
+              <label for="wave-slider">Onda: <span id="wave-val">0%</span></label>
+              <input type="range" id="wave-slider" min="0" max="100" step="5" value="0">
+            </div>
+            <div class="slider-group">
+              <label for="zoom-slider">Zoom: <span id="zoom-val">1.0x</span></label>
+              <input type="range" id="zoom-slider" min="1.0" max="3.0" step="0.1" value="1.0">
+            </div>
+            <div class="slider-group">
+              <label for="fusion-slider">Fusión: <span id="fusion-val">0%</span></label>
+              <input type="range" id="fusion-slider" min="0" max="100" step="5" value="0">
+            </div>
+            <div class="slider-group">
+              <label for="shutter-slider">Obturación: <span id="shutter-val">0%</span></label>
+              <input type="range" id="shutter-slider" min="0" max="95" step="5" value="0">
+            </div>
+            <div class="slider-group">
+              <label for="decay-slider">Eco Celular: <span id="decay-val">1.1</span></label>
+              <input type="range" id="decay-slider" min="0.04" max="2.5" step="0.02" value="1.1">
+            </div>
+            <div class="slider-group">
+              <label for="warp-slider">Fluidez: <span id="warp-val">100%</span></label>
+              <input type="range" id="warp-slider" min="0" max="200" step="5" value="100">
+            </div>
+            <div class="slider-group">
+              <label for="aspect-slider">Aspecto: <span id="aspect-val">Original</span></label>
+              <input type="range" id="aspect-slider" min="0" max="100" step="5" value="0" title="0% = Proporción original 16:9 sin deformar, 100% = Estirar a toda la pantalla">
+            </div>
+            <div class="slider-group">
+              <label for="brush-slider">Pincel: <span id="brush-val">50px</span></label>
+              <input type="range" id="brush-slider" min="15" max="200" step="5" value="50">
+            </div>
+          </div>
+        </div>
+
+        <!-- MÓDULO 5: AUDIO & SISTEMA -->
+        <div class="deck-module">
+          <div class="module-title">AUDIO & SISTEMA</div>
+          <div class="audio-grid">
+            <button id="btn-sound" class="btn-tech-sub">Audio: <span id="sound-label">ON</span></button>
+            <button id="btn-audio-next" class="btn-tech-sub" title="Cambiar tema">Pista: Dark Drone</button>
+            <button id="btn-audio-upload" class="btn-tech-sub" title="Cargar archivo de música">+ Canción</button>
+            <input type="file" id="audio-file-input" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" style="display: none;" />
+            <button id="btn-res" class="btn-tech-sub">Nitidez: <span id="res-label">2px</span></button>
+            <button id="btn-fullscreen" class="btn-tech-sub" style="grid-column: span 2;">Pantalla Completa</button>
+          </div>
+          <div class="audio-faders-grid">
+            <div class="slider-group">
+              <label for="pitch-slider">Pitch: <span id="pitch-val">0 st</span></label>
+              <input type="range" id="pitch-slider" min="-12" max="12" step="1" value="0">
+            </div>
+            <div class="slider-group">
+              <label for="rate-slider">Rate: <span id="rate-val">1.00x</span></label>
+              <input type="range" id="rate-slider" min="0.25" max="2.0" step="0.05" value="1.0">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de Tips y Atajos de Teclado -->
+      <div class="deck-footer-bar">
+        <span><b>V</b>: Expandir/Solo · <b>O</b>: Aspecto · <b>G</b>: Glitch · <b>K</b>: Cine 20s · <b>P</b>: Pausa · <b>H</b>: Ocultar consola · <b>F</b>: Fullscreen · <b>T</b>: Tinte · <b>C</b>: Paleta · <b>1/2/3</b>: Fuente · <b>Espacio</b>: Sig foto</span>
+      </div>
+    </footer>
+
+    <!-- Indicador Flotante HUD para feedback de notas y tiras MIDI -->
+    <div id="midi-hud" class="midi-hud"></div>
+
+    <script src="sketch.js"></script>
+  </body>
+</html>
